@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#005A36" />
+  <title>Hamkkyu — SKKU Campus Buddy</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Nunito & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- React & ReactDOM (Production UMD) + Babel Standalone for in-browser JSX -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #e2e8f0;
+      overscroll-behavior-y: none;
+    }
+    #root {
+      height: 100%;
+      width: 100%;
+    }
+    .app-shell {
+      height: 100dvh;
+      max-height: 100dvh;
+    }
+    @media (min-width: 640px) {
+      .app-shell {
+        height: 860px;
+        max-height: 92dvh;
+      }
+    }
+    .safe-top {
+      padding-top: max(12px, env(safe-area-inset-top, 12px));
+    }
+    .safe-bottom {
+      padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+    }
+
+    /* Hamkkyu SVG & CSS Motion Engine */
+    .hb {
+      position: relative;
+      width: var(--hb-size, 140px);
+      height: var(--hb-size, 140px);
+      display: inline-block;
+      flex-shrink: 0;
+      vertical-align: middle;
+      user-select: none;
+    }
+    .hb svg { width: 100%; height: 100%; overflow: visible; display: block; }
+    .hb .hb-squash { transform-origin: 100px 186px; animation: hb-breathe 3.2s ease-in-out infinite; }
+    .hb .hb-body { transform-origin: 100px 186px; }
+    .hb .hb-shadow { transform-origin: 100px 190px; }
+    .hb .hb-eyes { transform-box: fill-box; transform-origin: center; transition: transform .25s ease; }
+    .hb .hb-eye-open { transform-box: fill-box; transform-origin: center; animation: hb-blink 4.6s infinite; }
+    .hb .hb-eye-happy, .hb .hb-eye-sleep, .hb .hb-m-open, .hb .hb-m-o, .hb .hb-m-flat { display: none; }
+    .hb .hb-ears { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .2s ease; }
+    .hb .hb-sprout { transform-box: fill-box; transform-origin: 50% 100%; }
+    .hb .hb-paw { transition: transform .3s cubic-bezier(.3,1.4,.5,1); }
+    .hb .hb-paw-l { transform: translate(86px,158px); }
+    .hb .hb-paw-r { transform: translate(114px,158px); }
+    .hb .hb-paw-r-in { transform-box: fill-box; transform-origin: 50% 260%; }
+    .hb .hb-fx-wave, .hb .hb-fx-q, .hb .hb-z1, .hb .hb-z2, .hb .hb-s1, .hb .hb-s2, .hb .hb-s3 { opacity: 0; }
+    .hb .hb-s1, .hb .hb-s2, .hb .hb-s3 { transform-box: fill-box; transform-origin: center; }
+
+    /* Faces */
+    .hb[data-face="wave"] .hb-paw-r { transform: translate(170px,90px); }
+    .hb[data-face="wow"] .hb-paw-l { transform: translate(48px,150px); }
+    .hb[data-face="wow"] .hb-paw-r { transform: translate(152px,150px); }
+    .hb[data-face="wow"] .hb-eyes { transform: scale(1.15); }
+    .hb[data-face="wow"] .hb-ears { transform: translateY(-4px); }
+    .hb[data-face="wow"] .hb-m-smile { display: none; }
+    .hb[data-face="wow"] .hb-m-o { display: inline; }
+    .hb[data-face="think"] .hb-paw-r { transform: translate(113px,142px); }
+    .hb[data-face="think"] .hb-eyes { transform: translate(2px,-3px); }
+    .hb[data-face="think"] .hb-m-smile { display: none; }
+    .hb[data-face="think"] .hb-m-flat { display: inline; }
+    .hb[data-face="think"] .hb-fx-q { opacity: 1; animation: hb-bob 1.1s ease-in-out infinite alternate; }
+    .hb[data-face="cheer"] .hb-paw-l { transform: translate(32px,86px); }
+    .hb[data-face="cheer"] .hb-paw-r { transform: translate(168px,86px); }
+    .hb[data-face="cheer"] .hb-eye-open { display: none; }
+    .hb[data-face="cheer"] .hb-eye-happy { display: inline; }
+    .hb[data-face="cheer"] .hb-m-smile { display: none; }
+    .hb[data-face="cheer"] .hb-m-open { display: inline; }
+    .hb[data-face="sleepy"] .hb-paw-l { transform: translate(92px,160px); }
+    .hb[data-face="sleepy"] .hb-paw-r { transform: translate(108px,160px); }
+    .hb[data-face="sleepy"] .hb-eye-open { display: none; }
+    .hb[data-face="sleepy"] .hb-eye-sleep { display: inline; }
+    .hb[data-face="sleepy"] .hb-m-smile { display: none; }
+    .hb[data-face="sleepy"] .hb-m-flat { display: inline; }
+    .hb[data-face="sleepy"] .hb-squash { animation-duration: 4.6s; }
+    .hb[data-face="sleepy"] .hb-z1 { animation: hb-zz 2.6s ease-out infinite; }
+    .hb[data-face="sleepy"] .hb-z2 { animation: hb-zz 2.6s ease-out 1.3s infinite; }
+
+    /* Loops */
+    .hb[data-loop="think"]:not([data-anim]) .hb-body { animation: hb-sway 2.4s ease-in-out infinite; }
+
+    /* One-shots */
+    .hb[data-anim="wave"] .hb-paw-r-in { animation: hb-wave .3s ease-in-out 4 alternate; }
+    .hb[data-anim="wave"] .hb-fx-wave { animation: hb-flash 1.3s ease-out; }
+    .hb[data-anim="hop"] .hb-body { animation: hb-hop .7s ease-out; }
+    .hb[data-anim="hop"] .hb-shadow { animation: hb-shadow .7s ease-out; }
+    .hb[data-anim="wow"] .hb-body { animation: hb-pop .55s ease-out; }
+    .hb[data-anim="cheer"] .hb-body { animation: hb-hop .6s ease-out 2; }
+    .hb[data-anim="cheer"] .hb-shadow { animation: hb-shadow .6s ease-out 2; }
+    .hb[data-anim="grow"] .hb-sprout { animation: hb-grow .9s cubic-bezier(.3,1.6,.5,1) both; }
+    .hb[data-anim="grow"] .hb-body { animation: hb-pop .55s ease-out .55s; }
+    .hb[data-anim="hatch"] .hb-body { animation: hb-emerge .65s cubic-bezier(.3,1.5,.5,1) 1.15s both; }
+    .hb[data-anim="wow"] .hb-s1, .hb[data-anim="cheer"] .hb-s1, .hb[data-anim="grow"] .hb-s1, .hb[data-anim="hatch"] .hb-s1 { animation: hb-twinkle .9s ease-out both; }
+    .hb[data-anim="wow"] .hb-s2, .hb[data-anim="cheer"] .hb-s2, .hb[data-anim="grow"] .hb-s2 { animation: hb-twinkle .9s ease-out .15s both; }
+    .hb[data-anim="wow"] .hb-s3, .hb[data-anim="cheer"] .hb-s3, .hb[data-anim="grow"] .hb-s3 { animation: hb-twinkle .9s ease-out .3s both; }
+    .hb[data-anim="hatch"] .hb-s1 { animation-delay: 1.3s; }
+    .hb[data-anim="hatch"] .hb-s2 { animation-delay: .9s ease-out 1.45s both; }
+    .hb[data-anim="hatch"] .hb-s3 { animation-delay: .9s ease-out 1.6s both; }
+
+    /* Ginkgo Leaf Pile (One-time Launch Reveal) */
+    .hb .hb-pile { position: absolute; inset: 0; pointer-events: none; }
+    .hb .hb-pile svg { width: 100%; height: 100%; overflow: visible; display: block; }
+    .hb .hb-pile-all { transform-origin: 100px 192px; animation: hb-rustle .2s ease-in-out 5 alternate; }
+    .hb .hb-leaf { animation: hb-leaf-fly .85s cubic-bezier(.25,.7,.4,1) var(--fd) forwards; }
+
+    /* Confetti */
+    .hb .hb-confetti {
+      position: absolute; left: 50%; top: 38%; width: 7px; height: 11px; border-radius: 2px;
+      pointer-events: none; animation: hb-confetti 1.2s cubic-bezier(.2,.7,.4,1) forwards;
+    }
+
+    /* Speech bubble */
+    .hb .hb-bubble {
+      position: absolute; z-index: 20; width: max-content; max-width: 225px;
+      background: #FFFFFF; color: #1F1B3A; border: 1.5px solid #005A36; border-radius: 14px;
+      padding: 7px 12px; font-weight: 800; font-size: 11px; line-height: 1.35;
+      box-shadow: 0 6px 20px rgba(0,90,54,0.18); animation: hb-bubble .32s cubic-bezier(.3,1.5,.5,1);
+    }
+    .hb .hb-bubble[data-side="top"] { left: 50%; bottom: calc(100% + 4px); transform: translateX(-50%); }
+
+    @keyframes hb-breathe { 0%, 100% { transform: scale(1,1); } 50% { transform: scale(1.015,1.03); } }
+    @keyframes hb-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.1); } }
+    @keyframes hb-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+    @keyframes hb-bob { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+    @keyframes hb-zz { 0% { opacity: 0; transform: translate(0,6px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(10px,-18px); } }
+    @keyframes hb-wave { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+    @keyframes hb-flash { 0%, 100% { opacity: 0; } 20%, 80% { opacity: 1; } }
+    @keyframes hb-hop { 0% { transform: none; } 18% { transform: scale(1.08,.92); } 48% { transform: translateY(-24px) scale(.95,1.06); } 78% { transform: scale(1.06,.94); } 100% { transform: none; } }
+    @keyframes hb-shadow { 0%, 100% { transform: none; opacity: 1; } 48% { transform: scale(.7); opacity:.5; } }
+    @keyframes hb-pop { 0% { transform: none; } 30% { transform: scale(1.1,.94); } 60% { transform: scale(.97,1.05); } 100% { transform: none; } }
+    @keyframes hb-twinkle { 0% { opacity: 0; transform: scale(0); } 40% { opacity: 1; transform: scale(1.3); } 100% { opacity: 0; transform: scale(.6); } }
+    @keyframes hb-grow { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+    @keyframes hb-emerge { 0% { opacity: 0; transform: translateY(30px) scale(.4); } 100% { opacity: 1; transform: none; } }
+    @keyframes hb-rustle { 0% { transform: rotate(-3deg) scale(1,1); } 100% { transform: rotate(3deg) scale(1.03,.97); } }
+    @keyframes hb-leaf-fly {
+      0% { transform: none; opacity: 1; }
+      45% { transform: translate(calc(var(--fx) * .6), calc(var(--fy) * .8)) rotate(calc(var(--fr) * .5)); opacity: 1; }
+      100% { transform: translate(var(--fx), calc(var(--fy) + 30px)) rotate(var(--fr)); opacity: 0; }
+    }
+    @keyframes hb-confetti { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx),var(--dy)) rotate(var(--rot)); opacity: 0; } }
+    @keyframes hb-bubble { from { opacity: 0; transform: translateX(-50%) scale(.6); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    /* Crisp Inline SVG Icons for Zero External Icon Font Dependencies */
+    const Icon = ({ name, size = 18, className = '', fill = 'none' }) => {
+      const props = {
+        width: size,
+        height: size,
+        viewBox: '0 0 24 24',
+        fill,
+        stroke: 'currentColor',
+        strokeWidth: 2,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        className
+      };
+
+      switch (name) {
+        case 'home':
+          return <svg {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+        case 'chat':
+          return <svg {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+        case 'map':
+          return <svg {...props}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>;
+        case 'newspaper':
+          return <svg {...props}><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>;
+        case 'menu':
+          return <svg {...props}><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>;
+        case 'x':
+          return <svg {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        case 'globe':
+          return <svg {...props}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+        case 'userPlus':
+          return <svg {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>;
+        case 'users':
+          return <svg {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+        case 'calendar':
+          return <svg {...props}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+        case 'star':
+          return <svg {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+        case 'phone':
+          return <svg {...props}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
+        case 'utensils':
+          return <svg {...props}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>;
+        case 'coffee':
+          return <svg {...props}><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>;
+        case 'search':
+          return <svg {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        case 'send':
+          return <svg {...props}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+        case 'camera':
+          return <svg {...props}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>;
+        case 'lock':
+          return <svg {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+        case 'unlock':
+          return <svg {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>;
+        case 'plus':
+          return <svg {...props}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+        case 'eye':
+          return <svg {...props}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+        case 'help':
+          return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+        case 'chevronRight':
+          return <svg {...props}><polyline points="9 18 15 12 9 6"/></svg>;
+        case 'zap':
+          return <svg {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+        case 'shirt':
+          return <svg {...props}><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>;
+        case 'smile':
+          return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>;
+        case 'check':
+          return <svg {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+        case 'sparkles':
+          return <svg {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>;
+        case 'navigation':
+          return <svg {...props}><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>;
+        case 'pin':
+          return <svg {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+        default:
+          return null;
+      }
+    };
+
+    function HamkkyuMascot({ 
+      outfit = 'uniform', 
+      motion = 'idle', 
+      motionTrigger = 0,
+      size = 136, 
+      speechBubble = null,
+      className = '',
+      onClick
+    }) {
+      const [activeAnim, setActiveAnim] = useState(null);
+      const [confettiPieces, setConfettiPieces] = useState([]);
+      const [showPile, setShowPile] = useState(false);
+
+      const ONE_SHOTS = {
+        wave: { face: 'wave', ms: 1300 },
+        hop: { face: null, ms: 750 },
+        wow: { face: 'wow', ms: 1100 },
+        cheer: { face: 'cheer', ms: 1400, confetti: true },
+        grow: { face: 'cheer', ms: 1300 },
+        hatch: { face: 'wow', ms: 2200, pile: true }
+      };
+
+      const GINKGO_LEAF_PATH = 'M0 0 C-10 -8 -26 -26 -24 -42 Q-12 -50 -2 -44 L0 -37 L2 -44 Q12 -50 24 -42 C26 -26 10 -8 0 0 Z';
+      const GINKGO_LEAVES = [
+        [100, 192, 0, 1.9, '#E9B12A', 0, -150, 200],
+        [64, 194, -38, 1.75, '#D9A21F', -120, -60, -260],
+        [136, 194, 38, 1.75, '#F2C33A', 120, -70, 240],
+        [44, 188, -72, 1.5, '#C9D04E', -150, 10, -300],
+        [156, 188, 72, 1.5, '#EEBC2E', 150, 0, 280],
+        [82, 158, -22, 1.6, '#F5CF4C', -90, -130, -200],
+        [118, 158, 22, 1.6, '#E6AE25', 90, -140, 220],
+        [100, 132, 0, 1.45, '#F7D85E', 10, -170, 160],
+        [70, 120, -40, 1.1, '#B9C447', -110, -150, -180],
+        [132, 118, 42, 1.1, '#F2C33A', 120, -150, 190]
+      ];
+
+      const LOOPS = {
+        idle: 'happy',
+        think: 'think',
+        sleep: 'sleepy'
+      };
+
+      useEffect(() => {
+        if (ONE_SHOTS[motion]) {
+          const shot = ONE_SHOTS[motion];
+          setActiveAnim(null);
+          setShowPile(false);
+          setConfettiPieces([]);
+
+          const startTimer = setTimeout(() => {
+            setActiveAnim(motion);
+            if (shot.pile) setShowPile(true);
+            if (shot.confetti) {
+              const colors = ['#7B61FF', '#F28AB2', '#FFB547', '#2BB673', '#3E9BEA'];
+              const pieces = Array.from({ length: 16 }).map((_, i) => {
+                const angle = (Math.PI * 2 * i) / 16 + Math.random() * 0.4;
+                const dist = 0.45 + Math.random() * 0.35;
+                return {
+                  id: `${Date.now()}-${i}`,
+                  bg: colors[i % colors.length],
+                  dx: Math.round(Math.cos(angle) * dist * size) + 'px',
+                  dy: Math.round(Math.sin(angle) * dist * size - 20) + 'px',
+                  rot: Math.round(Math.random() * 540 - 270) + 'deg'
+                };
+              });
+              setConfettiPieces(pieces);
+            }
+          }, 20);
+
+          const endTimer = setTimeout(() => {
+            setActiveAnim(null);
+            setShowPile(false);
+            setConfettiPieces([]);
+          }, shot.ms + 30);
+
+          return () => {
+            clearTimeout(startTimer);
+            clearTimeout(endTimer);
+          };
+        } else {
+          setActiveAnim(null);
+          setShowPile(false);
+        }
+      }, [motion, motionTrigger, size]);
+
+      const currentLoop = LOOPS[motion] ? motion : 'idle';
+      const persistentFaces = {
+        wave: 'wave',
+        wow: 'wow',
+        cheer: 'cheer',
+        grow: 'cheer',
+        think: 'think',
+        sleep: 'sleepy'
+      };
+      const currentFace = activeAnim && ONE_SHOTS[activeAnim]?.face 
+        ? ONE_SHOTS[activeAnim].face 
+        : persistentFaces[motion] || LOOPS[currentLoop];
+
+      const hasHat = outfit === 'explorer' || outfit === 'graduation';
+      const BODY_PATH = 'M31 148 Q100 162 169 148 A77 66 0 0 1 100 184 A77 66 0 0 1 31 148 Z';
+
+      return (
+        <div 
+          onClick={onClick}
+          className={`hb ${className}`}
+          data-face={currentFace}
+          data-loop={currentLoop !== 'idle' && !activeAnim ? currentLoop : undefined}
+          data-anim={activeAnim || undefined}
+          style={{ '--hb-size': `${size}px` }}
+        >
+          {speechBubble && (
+            <div className="hb-bubble" data-side="top" role="status">
+              {speechBubble}
+            </div>
+          )}
+
+          <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+            <ellipse className="hb-shadow" cx="100" cy="190" rx="56" ry="7" fill="#1F1B3A" opacity="0.1" />
+            <g className="hb-body">
+              <g className="hb-squash">
+                <ellipse cx="74" cy="181" rx="15" ry="8" fill="#F7C9A0" />
+                <ellipse cx="126" cy="181" rx="15" ry="8" fill="#F7C9A0" />
+
+                <g className="hb-ears">
+                  <circle cx="58" cy="64" r="17" fill="#EFB06A" />
+                  <circle cx="59" cy="65" r="10" fill="#F6B3C6" />
+                  <circle cx="142" cy="64" r="17" fill="#EFB06A" />
+                  <circle cx="141" cy="65" r="10" fill="#F6B3C6" />
+                </g>
+
+                <ellipse cx="100" cy="118" rx="77" ry="66" fill="#EFB06A" />
+                <path d="M93 56 Q96 47 100 53 Q104 47 107 56" fill="#EFB06A" />
+
+                <ellipse cx="100" cy="135" rx="58" ry="48" fill="#FFF3E3" />
+                <ellipse cx="55" cy="130" rx="23" ry="19" fill="#FFF3E3" />
+                <ellipse cx="145" cy="130" rx="23" ry="19" fill="#FFF3E3" />
+
+                <ellipse cx="57" cy="131" rx="12" ry="7" fill="#F7A6BF" opacity="0.85" />
+                <ellipse cx="143" cy="131" rx="12" ry="7" fill="#F7A6BF" opacity="0.85" />
+
+                {!hasHat && (
+                  <g className="hb-sprout">
+                    <path d="M100 52 Q97 40 102 28" fill="none" stroke="#2BB673" strokeWidth="4" strokeLinecap="round" />
+                    <ellipse cx="90" cy="28" rx="11" ry="6" fill="#2BB673" transform="rotate(-25 90 28)" />
+                    <ellipse cx="113" cy="23" rx="12" ry="6.5" fill="#4FCB8A" transform="rotate(20 113 23)" />
+                  </g>
+                )}
+
+                <g className="hb-eyes">
+                  <g className="hb-eye-open">
+                    <ellipse cx="77" cy="110" rx="9" ry="10.5" fill="#1F1B3A" />
+                    <ellipse cx="123" cy="110" rx="9" ry="10.5" fill="#1F1B3A" />
+                    <circle cx="80" cy="106" r="3.4" fill="#FFFFFF" />
+                    <circle cx="126" cy="106" r="3.4" fill="#FFFFFF" />
+                    <circle cx="74.5" cy="114" r="1.6" fill="#FFFFFF" />
+                    <circle cx="120.5" cy="114" r="1.6" fill="#FFFFFF" />
+                  </g>
+                  <g className="hb-eye-happy" fill="none" stroke="#1F1B3A" strokeWidth="3.5" strokeLinecap="round">
+                    <path d="M69 113 Q77 102 85 113" />
+                    <path d="M115 113 Q123 102 131 113" />
+                  </g>
+                  <g className="hb-eye-sleep" fill="none" stroke="#1F1B3A" strokeWidth="3.5" strokeLinecap="round">
+                    <path d="M69 111 Q77 117 85 111" />
+                    <path d="M115 111 Q123 117 131 111" />
+                  </g>
+                </g>
+
+                <ellipse cx="100" cy="122" rx="3.6" ry="2.6" fill="#E07A95" />
+                <path className="hb-m-smile" d="M93.5 127 Q96.75 131 100 127 Q103.25 131 106.5 127" fill="none" stroke="#1F1B3A" strokeWidth="2.5" strokeLinecap="round" />
+                <path className="hb-m-open" d="M92 126 Q100 139 108 126 Z" fill="#C2566F" stroke="#1F1B3A" strokeWidth="2" strokeLinejoin="round" />
+                <ellipse className="hb-m-o" cx="100" cy="131" rx="4" ry="5.5" fill="#C2566F" stroke="#1F1B3A" strokeWidth="2" />
+                <path className="hb-m-flat" d="M96.5 129 L103.5 129" fill="none" stroke="#1F1B3A" strokeWidth="2.5" strokeLinecap="round" />
+
+                <g className="hb-outfit">
+                  {outfit === 'uniform' && (
+                    <>
+                      <path d={BODY_PATH} fill="#005A36" />
+                      <path d="M33 149 Q100 163 167 149" fill="none" stroke="#F4F1E8" strokeWidth="5" strokeLinecap="round" />
+                      <path d="M38 156 Q100 170 162 156" fill="none" stroke="#F7B500" strokeWidth="2.2" strokeLinecap="round" />
+                      <text x="100" y="180" textAnchor="middle" fill="#F4F1E8" fontSize="14" letterSpacing="1" fontFamily="Nunito, Arial, sans-serif" fontWeight="800">SKKU</text>
+                    </>
+                  )}
+                  {outfit === 'hoodie' && (
+                    <>
+                      <path d={BODY_PATH} fill="#8C78F0" />
+                      <path d="M78 171 Q100 167 122 171 L118 182 Q100 186 82 182 Z" fill="#7660E0" />
+                      <path d="M92 156 L90 169 M108 156 L110 169" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" />
+                      <circle cx="90" cy="170" r="2.2" fill="#FFFFFF" />
+                      <circle cx="110" cy="170" r="2.2" fill="#FFFFFF" />
+                    </>
+                  )}
+                  {outfit === 'hanbok' && (
+                    <>
+                      <path d={BODY_PATH} fill="#FFE08A" />
+                      <path d="M62 151 L100 178 L138 151" fill="none" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                      <ellipse cx="106" cy="168" rx="6.5" ry="4" fill="#D94459" transform="rotate(-25 106 168)" />
+                      <ellipse cx="119" cy="168" rx="6.5" ry="4" fill="#D94459" transform="rotate(25 119 168)" />
+                      <path d="M111 171 L105 185 M114 171 L121 185" fill="none" stroke="#D94459" strokeWidth="4" strokeLinecap="round" />
+                      <circle cx="112.5" cy="169" r="3.2" fill="#B8304A" />
+                    </>
+                  )}
+                  {outfit === 'explorer' && (
+                    <>
+                      <path d={BODY_PATH} fill="#C9A66B" />
+                      <path d="M90 157 L100 184 L110 157 Z" fill="#FFF3E3" />
+                      <path d="M60 165 L78 165 L78 177 L60 177 Z" fill="#B28F55" />
+                      <path d="M122 165 L140 165 L140 177 L122 177 Z" fill="#B28F55" />
+                      <path d="M73 52 Q74 29 100 29 Q126 29 127 52 Z" fill="#D4A95E" />
+                      <path d="M74 45 Q100 41 126 45 L127 51 Q100 47 73 51 Z" fill="#7B61FF" />
+                      <ellipse cx="100" cy="53" rx="42" ry="8" fill="#B88B4A" />
+                    </>
+                  )}
+                  {outfit === 'graduation' && (
+                    <>
+                      <path d={BODY_PATH} fill="#2A2550" />
+                      <path d="M76 156 L100 176 L124 156" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M77 44 L77 55 Q100 63 123 55 L123 44 Z" fill="#2A2550" />
+                      <path d="M100 28 L142 41 L100 54 L58 41 Z" fill="#1F1B3A" />
+                      <path d="M100 41 L136 44 L137 62" fill="none" stroke="#F7B500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="100" cy="41" r="3" fill="#F7B500" />
+                      <ellipse cx="137" cy="64" rx="3" ry="5" fill="#F7B500" />
+                    </>
+                  )}
+                </g>
+
+                <g className="hb-paw hb-paw-l">
+                  <ellipse rx="8.5" ry="7" fill="#FBD3B4" stroke="#EBB08A" strokeWidth="1.5" />
+                </g>
+                <g className="hb-paw hb-paw-r">
+                  <ellipse className="hb-paw-r-in" rx="8.5" ry="7" fill="#FBD3B4" stroke="#EBB08A" strokeWidth="1.5" />
+                </g>
+              </g>
+            </g>
+
+            <g className="hb-fx-wave" fill="none" stroke="#7B61FF" strokeWidth="3" strokeLinecap="round">
+              <path d="M184 66 Q190 76 186 88" />
+              <path d="M193 58 Q201 76 195 94" />
+            </g>
+            <g className="hb-fx-q">
+              <circle cx="164" cy="44" r="19" fill="#ECE7FF" />
+              <text x="164" y="56" textAnchor="middle" fill="#6A4FF0" fontSize="32" fontFamily="Nunito, Arial, sans-serif" fontWeight="800">?</text>
+            </g>
+            <text className="hb-z1" x="150" y="66" fill="#6A4FF0" fontSize="18" fontFamily="Nunito, Arial, sans-serif" fontWeight="800">z</text>
+            <text className="hb-z2" x="164" y="46" fill="#6A4FF0" fontSize="26" fontFamily="Nunito, Arial, sans-serif" fontWeight="800">Z</text>
+            <path className="hb-s1" d="M26 42 L28.5 49.5 L36 52 L28.5 54.5 L26 62 L23.5 54.5 L16 52 L23.5 49.5 Z" fill="#FFB547" />
+        <path className="hb-s2" d="M174 26 L176 32 L182 34 L176 36 L174 42 L172 36 L166 34 L172 32 Z" fill="#F28AB2" />
+        <path className="hb-s3" d="M186 108 L188 113 L193 115 L188 117 L186 122 L184 117 L179 115 L184 113 Z" fill="#7B61FF" />
+      </svg>
+
+      {showPile && (
+        <div className="hb-pile" aria-hidden="true">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <g className="hb-pile-all">
+              <g transform="translate(0 -14)">
+                {GINKGO_LEAVES.map((l, i) => (
+                  <g
+                    key={i}
+                    className="hb-leaf"
+                    style={{
+                      '--fx': `${l[5]}px`,
+                      '--fy': `${l[6]}px`,
+                      '--fr': `${l[7]}deg`,
+                      '--fd': `${(1.0 + i * 0.03).toFixed(2)}s`
+                    }}
+                  >
+                    <g transform={`translate(${l[0]} ${l[1]}) rotate(${l[2]}) scale(${l[3]})`}>
+                      <path d="M0 0 L0 12" stroke="#A87C1E" strokeWidth="2" strokeLinecap="round" />
+                      <path d={GINKGO_LEAF_PATH} fill={l[4]} stroke="#B9871C" strokeWidth="1" strokeLinejoin="round" />
+                      <path d="M0 -2 L-14 -38 M0 -2 L-5 -40 M0 -2 L5 -40 M0 -2 L14 -38" stroke="#B9871C" strokeWidth="0.8" opacity="0.45" fill="none" />
+                    </g>
+                  </g>
+                ))}
+              </g>
+            </g>
+          </svg>
+        </div>
+      )}
+
+      {confettiPieces.map((c) => (
+            <span
+              key={c.id}
+              className="hb-confetti"
+              style={{
+                background: c.bg,
+                '--dx': c.dx,
+                '--dy': c.dy,
+                '--rot': c.rot
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    const OUTFIT_OPTIONS = [
+      { id: 'uniform', label: 'SKKU Jacket', desc: 'Everyday uniform' },
+      { id: 'none', label: 'No Outfit', desc: 'Classic hamster' },
+      { id: 'hoodie', label: 'Hoodie', desc: 'Exam study mode' },
+      { id: 'hanbok', label: 'Hanbok', desc: 'Korean culture' },
+      { id: 'explorer', label: 'Explorer', desc: 'Campus tour gear' },
+      { id: 'graduation', label: 'Graduation', desc: 'Commencement' },
+    ];
+
+    const MOTION_OPTIONS = [
+      { id: 'idle', label: 'Idle', emoji: '😊' },
+      { id: 'wave', label: 'Wave Hello', emoji: '👋' },
+      { id: 'hop', label: 'Hop', emoji: '🐇' },
+      { id: 'wow', label: 'Wow!', emoji: '😲' },
+      { id: 'think', label: 'Thinking', emoji: '🤔' },
+      { id: 'cheer', label: 'Cheer', emoji: '🎉' },
+      { id: 'grow', label: 'Sprout Grows', emoji: '🌱' },
+      { id: 'sleep', label: 'Sleep', emoji: '💤' },
+    ];
+
+    function App() {
+      const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+      const [hasHatchedOnce, setHasHatchedOnce] = useState(false);
+      const [onboardingLang, setOnboardingLang] = useState('English');
+
+      const [activeTab, setActiveTab] = useState('home');
+      const [campus, setCampus] = useState('seoul');
+      const [language, setLanguage] = useState('EN');
+      const [isMenuOpen, setIsMenuOpen] = useState(false);
+      const [isFaqOpen, setIsFaqOpen] = useState(false);
+
+      const [hamkkyuOutfit, setHamkkyuOutfit] = useState('uniform');
+      const [hamkkyuMotion, setHamkkyuMotion] = useState('idle');
+      const [motionTrigger, setMotionTrigger] = useState(0);
+      const [homeSpeechBubble, setHomeSpeechBubble] = useState(null);
+      const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
+      const [customizerTab, setCustomizerTab] = useState('outfit');
+
+      const [level, setLevel] = useState(1);
+      const [exp, setExp] = useState(25);
+      const [questCompleted, setQuestCompleted] = useState(false);
+      const [expToast, setExpToast] = useState(null);
+
+      const [gpsStep, setGpsStep] = useState(0);
+      const [gpsBubble, setGpsBubble] = useState('Walk with your phone to move!');
+      const [mapMode, setMapMode] = useState('quest');
+      const mapContainerRef = useRef(null);
+
+      const GPS_ROUTES = {
+        seoul: {
+          questTitle: 'Walk to 600th Anniversary Hall',
+          targetName: '600th Anniversary Hall (600주년기념관)',
+          officialMapUrl: 'https://www.skku.edu/eng/About/campusinfo/campusMap.do',
+          googleEmbedUrl: 'https://maps.google.com/maps?q=Sungkyunkwan%20University%20Humanities%20and%20Social%20Sciences%20Campus&t=&z=16&ie=UTF8&iwloc=&output=embed',
+          waypoints: [
+            { x: 20, y: 80, label: 'Main Gate (정문)' },
+            { x: 36, y: 62, label: '600th Anniversary Hall (600주년기념관)' }
+          ],
+          landmarks: [
+            { x: 20, y: 80, name: 'Main Gate', icon: '⛩️' },
+            { x: 36, y: 62, name: '600th Anniv. Hall (10)', icon: '🏛️', isTarget: true },
+            { x: 60, y: 44, name: 'Central Library (70)', icon: '📚' },
+            { x: 78, y: 24, name: 'Business Bldg (33)', icon: '🏢' },
+            { x: 25, y: 34, name: 'International Hall (90)', icon: '🌐' }
+          ]
+        },
+        suwon: {
+          questTitle: 'Walk to Samsung Library',
+          targetName: 'Samsung Library (삼성학술정보관)',
+          officialMapUrl: 'https://www.skku.edu/eng/About/campusinfo/campusMap.do',
+          googleEmbedUrl: 'https://maps.google.com/maps?q=Sungkyunkwan%20University%20Natural%20Sciences%20Campus&t=&z=16&ie=UTF8&iwloc=&output=embed',
+          waypoints: [
+            { x: 22, y: 82, label: 'SKKU Station Gate' },
+            { x: 42, y: 64, label: 'Engineering Bldg 1' },
+            { x: 62, y: 45, label: 'Student Center' },
+            { x: 76, y: 24, label: 'Samsung Library' }
+          ],
+          landmarks: [
+            { x: 22, y: 82, name: 'Campus Gate', icon: '🚉' },
+            { x: 42, y: 64, name: 'Engineering 1', icon: '⚙️' },
+            { x: 62, y: 45, name: 'Student Center', icon: '🍱' },
+            { x: 76, y: 24, name: 'Samsung Library', icon: '🏛️', isTarget: true },
+            { x: 28, y: 36, name: 'Bongryong Dorm', icon: '🏠' }
+          ]
+        }
+      };
+
+      const addExp = (amount, reason) => {
+        let newExp = exp + amount;
+        let newLevel = level;
+        if (newExp >= 100) {
+          newLevel += 1;
+          newExp = newExp - 100;
+        }
+        setLevel(newLevel);
+        setExp(newExp);
+        setExpToast(`+${amount} EXP • ${reason}`);
+        setTimeout(() => setExpToast(null), 2500);
+      };
+
+      const triggerHamkkyuMotion = (motionName, bubbleText = null, duration = 2600) => {
+        setHamkkyuMotion(motionName);
+        setMotionTrigger(t => t + 1);
+        if (bubbleText) {
+          setHomeSpeechBubble(bubbleText);
+          if (duration) {
+            setTimeout(() => setHomeSpeechBubble(null), duration);
+          }
+        }
+      };
+
+      const handleFinishOnboarding = () => {
+        if (onboardingLang === 'English') setLanguage('EN');
+        else if (onboardingLang === '한국어') setLanguage('KR');
+        else setLanguage('CN');
+
+        const campusLabel = campus === 'seoul' ? 'Seoul' : 'Suwon';
+        setHomeSpeechBubble(`Hi! Ready to help you navigate ${campusLabel} campus!`);
+        setHasCompletedOnboarding(true);
+        if (!hasHatchedOnce) {
+          setHasHatchedOnce(true);
+          setHamkkyuMotion('hatch');
+          setMotionTrigger(t => t + 1);
+          setTimeout(() => {
+            setHamkkyuMotion('idle');
+          }, 2350);
+        }
+      };
+
+      const maxStepIndex = GPS_ROUTES[campus].waypoints.length - 1;
+
+      const syncGpsPosition = (targetStep) => {
+        const clampedStep = Math.min(maxStepIndex, Math.max(0, targetStep));
+        setGpsStep(clampedStep);
+
+        if (clampedStep < maxStepIndex) {
+          setGpsBubble(`At ${GPS_ROUTES[campus].waypoints[clampedStep].label}`);
+        } else if (clampedStep === maxStepIndex) {
+          setGpsBubble('Yay! We arrived!');
+          if (!questCompleted) {
+            setQuestCompleted(true);
+            addExp(30, 'Campus Quest Accomplished');
+          }
+          triggerHamkkyuMotion('cheer', 'Yay! Quest accomplished! (+30 EXP)', 3200);
+        }
+      };
+
+      const handleMapPointerMove = (e) => {
+        if (!mapContainerRef.current) return;
+        const rect = mapContainerRef.current.getBoundingClientRect();
+        const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+        const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+
+        const wps = GPS_ROUTES[campus].waypoints;
+        let nearestIdx = 0;
+        let minDist = Infinity;
+        wps.forEach((wp, idx) => {
+          const dist = Math.hypot(wp.x - clickX, wp.y - clickY);
+          if (dist < minDist) {
+            minDist = dist;
+            nearestIdx = idx;
+          }
+        });
+        syncGpsPosition(nearestIdx);
+      };
+
+      useEffect(() => {
+        if (!questCompleted) {
+          setGpsStep(0);
+          setGpsBubble('Walk with your phone to move!');
+        }
+      }, [campus]);
+
+      const [myCode] = useState('SKKU-8829-JE');
+      const [friendCodeInput, setFriendCodeInput] = useState('');
+      const [friends, setFriends] = useState([
+        { id: 1, name: 'Sarah Lee', code: 'SKKU-1234-SL', status: 'Online', avatar: '👩‍🎓', isPublic: true },
+        { id: 2, name: 'Chen Wei', code: 'SKKU-5678-CW', status: 'In Class', avatar: '👨‍🎓', isPublic: false }
+      ]);
+      const [activeChatFriend, setActiveChatFriend] = useState(null);
+      const [friendMessages, setFriendMessages] = useState({
+        1: [{ sender: 'Sarah', text: 'Hey! Are you studying at the Central Lib today?', time: '10:14 AM' }],
+        2: [{ sender: 'Chen', text: 'Did you get the notes for Media Data Analytics?', time: 'Yesterday' }]
+      });
+      const [dmInput, setDmInput] = useState('');
+      const [showDmStickers, setShowDmStickers] = useState(false);
+
+      const [chatMessages, setChatMessages] = useState([
+        { sender: 'ai', text: "Hi! I'm Hamkkyu, your SKKU Campus Buddy! Ask me anything or tap FAQ Shortcuts above to earn EXP!" }
+      ]);
+      const [chatInput, setChatInput] = useState('');
+      const [isAiTyping, setIsAiTyping] = useState(false);
+      const [showChatStickers, setShowChatStickers] = useState(false);
+      const chatEndRef = useRef(null);
+
+      const [isPublicSchedule, setIsPublicSchedule] = useState(true);
+      const [viewingFriendTimetable, setViewingFriendTimetable] = useState(null);
+      const [mySchedule, setMySchedule] = useState([
+        { id: 1, name: 'Global Cultural Content Industry', prof: 'Prof. Kim', day: 'Mon', time: '10:30 - 12:00', room: 'Intl Hall 90109' },
+        { id: 2, name: 'Digital Social Media Analytics', prof: 'Prof. Park', day: 'Wed', time: '13:30 - 15:00', room: 'Business Bldg 33301' },
+        { id: 3, name: 'Global Cultural Content Industry and Business', prof: 'Prof. Lee', day: 'Wed', time: '18:00 - 20:45', room: 'Central Library 70527' }
+      ]);
+      const [newCourse, setNewCourse] = useState({ name: '', prof: '', day: 'Mon', time: '09:00 - 10:30', room: '' });
+      const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
+
+      const [reviewSearch, setReviewSearch] = useState('');
+      const [reviewModalCourse, setReviewModalCourse] = useState(null);
+      const [newRating, setNewRating] = useState(5);
+      const [newReviewText, setNewReviewText] = useState('');
+      const [lectureReviews, setLectureReviews] = useState([
+        { id: 1, course: 'Global Cultural Content Industry', prof: 'Prof. Kim', rating: 5, review: 'Super engaging lectures! Great case studies on webtoons and media adaptation.', date: '2026-10-15' },
+        { id: 2, course: 'Digital Social Media Analytics', prof: 'Prof. Park', rating: 4, review: 'Informative Python data analysis, but homework assignments require good practice.', date: '2026-09-28' }
+      ]);
+
+      const [nearCategory, setNearCategory] = useState('solo');
+
+      const isUserTyping = chatInput.trim().length > 0;
+      const miniChatMotion = isAiTyping ? 'think' : isUserTyping ? 'hop' : 'idle';
+
+      useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [chatMessages, isAiTyping]);
+
+      const handleAddFriend = () => {
+        if (!friendCodeInput.trim()) return;
+        const newF = {
+          id: Date.now(),
+          name: `SKKU Student (${friendCodeInput.slice(-4)})`,
+          code: friendCodeInput.toUpperCase(),
+          status: 'Connected',
+          avatar: '🎓',
+          isPublic: true
+        };
+        setFriends([...friends, newF]);
+        setFriendCodeInput('');
+      };
+
+      const handleSendDM = (stickerObj = null) => {
+        if (!activeChatFriend) return;
+        if (!stickerObj && !dmInput.trim()) return;
+
+        const fId = activeChatFriend.id;
+        const existingMsg = friendMessages[fId] || [];
+        const newMsg = stickerObj
+          ? { sender: 'me', sticker: stickerObj, time: 'Just now' }
+          : { sender: 'me', text: dmInput, time: 'Just now' };
+
+        setFriendMessages({
+          ...friendMessages,
+          [fId]: [...existingMsg, newMsg]
+        });
+        if (!stickerObj) setDmInput('');
+        setShowDmStickers(false);
+      };
+
+      const handleSendAiMsg = (textToSend = null, stickerObj = null) => {
+        const q = textToSend || chatInput;
+        if (!stickerObj && !q.trim()) return;
+
+        const userMsg = stickerObj
+          ? { sender: 'user', sticker: stickerObj }
+          : { sender: 'user', text: q };
+
+        setChatMessages(prev => [...prev, userMsg]);
+        if (!textToSend && !stickerObj) setChatInput('');
+        setIsFaqOpen(false);
+        setShowChatStickers(false);
+        setIsAiTyping(true);
+        addExp(15, 'Asked Hamkkyu');
+
+        setTimeout(() => {
+          let reply = "I stuffed that tip into my cheek pouches! Let me know if you need directions, menus, or study spots.";
+          if (stickerObj) {
+            reply = `${stickerObj.emoji} ${stickerObj.label}! Hamkkyu is always cheering for your SKKU campus life!`;
+          } else if (q.toLowerCase().includes('print')) {
+            reply = "Printing stations are located on the first floor (1F) of the Business Building (33) and the Central Library (70)!";
+          } else if (q.toLowerCase().includes('shuttle')) {
+            reply = "The SKKU Shuttle bus runs between Hyehwa Station Exit 1, Main Gate, 600th Anniversary Hall, and the Basketball Court. You don't have to tap your card when you get off!";
+          } else if (q.toLowerCase().includes('club')) {
+            reply = "You can apply for student clubs through Kingo ID > GLS > Student Activities or visit the Student Hall booths!";
+          } else if (q.toLowerCase().includes('library')) {
+            reply = "Central Library reading rooms are open until 23:00 (24 hours during midterm and final exam periods)!";
+          }
+          setIsAiTyping(false);
+          setChatMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+        }, 1100);
+      };
+
+      const handleAddCourse = () => {
+        if (!newCourse.name) return;
+        setMySchedule([...mySchedule, { ...newCourse, id: Date.now() }]);
+        setNewCourse({ name: '', prof: '', day: 'Mon', time: '09:00 - 10:30', room: '' });
+        setIsAddCourseOpen(false);
+      };
+
+      const handleSubmitReview = () => {
+        if (!newReviewText.trim() || !reviewModalCourse) return;
+        setLectureReviews([
+          {
+            id: Date.now(),
+            course: reviewModalCourse.name,
+            prof: reviewModalCourse.prof,
+            rating: newRating,
+            review: newReviewText,
+            date: 'Just now'
+          },
+          ...lectureReviews
+        ]);
+        setNewReviewText('');
+        setReviewModalCourse(null);
+      };
+
+      const currentWaypoint = GPS_ROUTES[campus].waypoints[gpsStep];
+
+      return (
+        <div className="flex justify-center items-center min-h-full bg-slate-200 p-0 sm:p-4 font-sans selection:bg-[#005A36] selection:text-white">
+          {/* Responsive Phone Shell: Full 100dvh on Mobile, Framed Phone on Desktop */}
+          <div className="app-shell w-full max-w-md bg-slate-50 shadow-2xl rounded-none sm:rounded-[36px] overflow-hidden flex flex-col border-0 sm:border-[8px] border-slate-800 relative">
+
+            {!hasCompletedOnboarding ? (
+              <div className="flex-1 flex flex-col justify-between bg-[#F6F5FC] p-6 safe-top safe-bottom overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    {['English', '한국어', '中文'].map((langOpt) => (
+                      <button
+                        key={langOpt}
+                        onClick={() => setOnboardingLang(langOpt)}
+                        className={`px-3.5 py-2 rounded-full text-xs font-bold transition ${
+                          onboardingLang === langOpt
+                            ? 'bg-[#005A36] text-white shadow-sm'
+                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {langOpt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center text-center my-4">
+                  <HamkkyuMascot outfit="uniform" motion="wave" size={160} />
+
+                  <span className="mt-2 bg-[#E3F3EC] text-[#005A36] text-[11px] font-black px-3 py-1 rounded-full tracking-wide">
+                    SKKU
+                  </span>
+
+                  <h1 className="text-2xl font-black text-slate-900 mt-3 tracking-tight">
+                    Hi! I'm Hamkkyu.
+                  </h1>
+                  <p className="text-xs text-slate-600 mt-2 max-w-[270px] leading-relaxed">
+                    I'm your campus buddy. I'll help you find your way around SKKU, in {onboardingLang}.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-slate-800 px-1">Which campus are you on?</p>
+
+                  <button
+                    onClick={() => setCampus('seoul')}
+                    className={`w-full p-3.5 rounded-2xl text-left transition flex items-center justify-between border-2 ${
+                      campus === 'seoul'
+                        ? 'bg-white border-[#005A36] shadow-md'
+                        : 'bg-white/80 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-900">Seoul</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">Humanities and Social Sciences Campus</p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      campus === 'seoul' ? 'border-[#005A36] bg-[#005A36]' : 'border-slate-300'
+                    }`}>
+                      {campus === 'seoul' && <div className="w-2 h-2 rounded-full bg-[#F7B500]" />}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setCampus('suwon')}
+                    className={`w-full p-3.5 rounded-2xl text-left transition flex items-center justify-between border-2 ${
+                      campus === 'suwon'
+                        ? 'bg-white border-[#005A36] shadow-md'
+                        : 'bg-white/80 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-900">Suwon</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">Natural Sciences Campus</p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      campus === 'suwon' ? 'border-[#005A36] bg-[#005A36]' : 'border-slate-300'
+                    }`}>
+                      {campus === 'suwon' && <div className="w-2 h-2 rounded-full bg-[#F7B500]" />}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={handleFinishOnboarding}
+                    className="w-full mt-2 bg-[#005A36] hover:bg-[#004428] text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg transition flex items-center justify-center gap-2"
+                  >
+                    <span>Let's go</span>
+                    <Icon name="chevronRight" size={18} className="text-[#F7B500]" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <header className="bg-[#005A36] text-white px-4 pb-3 safe-top flex flex-col z-20 shadow-md space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
+                        <span className="bg-[#F7B500] text-[#005A36] text-xs px-1.5 py-0.5 rounded font-black">SKKU</span>
+                        Hamkkyu
+                      </span>
+                      <select 
+                        value={campus} 
+                        onChange={(e) => setCampus(e.target.value)}
+                        className="bg-[#004428] text-xs font-medium px-2 py-1 rounded text-[#F7B500] border border-[#005A36] outline-none"
+                      >
+                        <option value="seoul">Humanities (Seoul)</option>
+                        <option value="suwon">Natural Sci (Suwon)</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => setLanguage(l => l === 'EN' ? 'KR' : l === 'KR' ? 'CN' : 'EN')}
+                        className="bg-[#004428] text-[#F7B500] text-xs px-2 py-1 rounded border border-[#005A36] font-bold flex items-center gap-1"
+                      >
+                        <Icon name="globe" size={12} /> {language}
+                      </button>
+                      <button 
+                        onClick={() => setIsMenuOpen(true)}
+                        className="p-1.5 hover:bg-[#004428] rounded text-[#F7B500]"
+                        aria-label="Open menu"
+                      >
+                        <Icon name="menu" size={22} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#004428] px-3 py-1.5 rounded-xl flex items-center justify-between text-xs border border-[#005A36]">
+                    <div className="flex items-center space-x-1.5 text-[#F7B500] font-bold">
+                      <Icon name="zap" size={14} fill="#F7B500" />
+                      <span>Level {level} Scholar</span>
+                    </div>
+                    <div className="flex items-center space-x-2 w-1/2">
+                      <div className="flex-1 bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div className="bg-[#F7B500] h-full transition-all duration-300" style={{ width: `${exp}%` }}></div>
+                      </div>
+                      <span className="text-[10px] text-slate-300 font-medium">{exp}/100 EXP</span>
+                    </div>
+                  </div>
+                </header>
+
+                {expToast && (
+                  <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 bg-[#F7B500] text-[#005A36] font-black text-xs px-4 py-1.5 rounded-full shadow-lg border border-[#005A36] animate-bounce whitespace-nowrap">
+                    {expToast}
+                  </div>
+                )}
+
+                {isMenuOpen && (
+                  <div className="absolute inset-0 bg-black/60 z-50 flex justify-end">
+                    <div className="w-4/5 bg-white h-full shadow-2xl p-5 safe-top safe-bottom flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center pb-4 border-b">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-9 h-9 rounded-full bg-[#005A36] text-[#F7B500] font-black flex items-center justify-center">
+                              성대
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-slate-800 text-sm">Hamkkyu Campus Hub</h3>
+                              <p className="text-xs text-slate-500">Quick Menu & Services</p>
+                            </div>
+                          </div>
+                          <button onClick={() => setIsMenuOpen(false)} className="text-slate-500 p-1">
+                            <Icon name="x" size={20} />
+                          </button>
+                        </div>
+
+                        <div className="mt-4 space-y-1">
+                          {[
+                            { id: 'home', label: 'Home Dashboard', icon: 'home' },
+                            { id: 'questMap', label: 'Campus Quest GPS Map', icon: 'navigation' },
+                            { id: 'cafeteria', label: 'Cafeteria Daily Menus', icon: 'utensils' },
+                            { id: 'cafe', label: 'Campus Cafes & Stores', icon: 'coffee' },
+                            { id: 'near', label: 'Near Campus Hotspots', icon: 'map' },
+                            { id: 'timetable', label: 'Timetable & Reviews', icon: 'calendar' },
+                            { id: 'friends', label: 'Friends & Direct Messages', icon: 'users' },
+                            { id: 'reviews', label: 'Lecture Review Hub', icon: 'star' },
+                            { id: 'contacts', label: 'Important SKKU Contacts', icon: 'phone' },
+                          ].map((m) => (
+                            <button
+                              key={m.id}
+                              onClick={() => {
+                                setActiveTab(m.id);
+                                setIsMenuOpen(false);
+                              }}
+                              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-medium transition ${
+                                activeTab === m.id ? 'bg-[#005A36] text-white font-bold' : 'text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              <Icon name={m.icon} size={16} className={activeTab === m.id ? 'text-[#F7B500]' : 'text-slate-500'} />
+                              <span>{m.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="border-t pt-3 text-center text-[10px] text-slate-400">
+                        Hamkkyu — Sungkyunkwan University Buddy
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <main className="flex-1 overflow-y-auto bg-slate-50 relative pb-20">
+                  {activeTab === 'home' && (
+                    <div className="p-4 space-y-4 overflow-visible">
+                      <div className="pt-12 pb-1 flex flex-col items-center text-center relative overflow-visible">
+                        <div 
+                          onClick={() => setIsCustomizeModalOpen(true)}
+                          className="cursor-pointer group flex flex-col items-center overflow-visible"
+                        >
+                          <HamkkyuMascot 
+                            outfit={hamkkyuOutfit} 
+                            motion={hamkkyuMotion} 
+                            motionTrigger={motionTrigger}
+                            size={132} 
+                            speechBubble={homeSpeechBubble || `Ready to help you navigate ${campus === 'seoul' ? 'Seoul' : 'Suwon'} campus!`}
+                            className="group-hover:scale-105 transition-transform duration-200"
+                          />
+                          <span className="mt-2 inline-flex items-center gap-1 text-[#005A36] text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#005A36]/10 group-hover:bg-[#005A36] group-hover:text-[#F7B500] transition">
+                            <Icon name="sparkles" size={10} /> Tap Hamkkyu to customize
+                          </span>
+                        </div>
+                      </div>
+
+                      <div 
+                        onClick={() => setActiveTab('questMap')}
+                        className="bg-white border-2 border-[#F7B500] rounded-2xl p-4 shadow-sm cursor-pointer hover:border-[#005A36] transition group"
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <h3 className="font-bold text-xs text-[#005A36] flex items-center gap-1.5">
+                            🎯 Today's Campus Quest
+                          </h3>
+                          <span className="text-[10px] bg-[#F7B500] text-[#005A36] font-black px-2 py-0.5 rounded">+30 EXP</span>
+                        </div>
+                        <p className="text-xs text-slate-700 font-medium">
+                          {GPS_ROUTES[campus].questTitle} & check in via GPS!
+                        </p>
+                        <div className={`mt-3 w-full font-bold text-xs py-2.5 rounded-xl shadow transition flex items-center justify-center gap-1.5 ${
+                          questCompleted 
+                            ? 'bg-emerald-700 text-white' 
+                            : 'bg-[#005A36] text-[#F7B500] group-hover:bg-[#004428]'
+                        }`}>
+                          {questCompleted ? (
+                            <>
+                              <Icon name="check" size={15} /> Quest Accomplished! View GPS Map
+                            </>
+                          ) : (
+                            <>
+                              <Icon name="navigation" size={14} /> Open GPS Campus Map 🚀
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <button 
+                          onClick={() => setActiveTab('cafeteria')}
+                          className="p-3 bg-white border border-slate-200 rounded-xl flex items-center space-x-3 shadow-sm hover:border-[#005A36] text-left"
+                        >
+                          <div className="p-2 bg-[#005A36]/10 text-[#005A36] rounded-lg">
+                            <Icon name="utensils" size={18} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-slate-800">Cafeteria</h4>
+                            <p className="text-[10px] text-slate-500">Today's Menus</p>
+                          </div>
+                        </button>
+
+                        <button 
+                          onClick={() => setActiveTab('cafe')}
+                          className="p-3 bg-white border border-slate-200 rounded-xl flex items-center space-x-3 shadow-sm hover:border-[#005A36] text-left"
+                        >
+                          <div className="p-2 bg-[#F7B500]/20 text-[#005A36] rounded-lg">
+                            <Icon name="coffee" size={18} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-slate-800">Campus Cafes</h4>
+                            <p className="text-[10px] text-slate-500">Drinks & Snacks</p>
+                          </div>
+                        </button>
+
+                        <button 
+                          onClick={() => setActiveTab('near')}
+                          className="p-3 bg-white border border-slate-200 rounded-xl flex items-center space-x-3 shadow-sm hover:border-[#005A36] text-left"
+                        >
+                          <div className="p-2 bg-[#005A36]/10 text-[#005A36] rounded-lg">
+                            <Icon name="map" size={18} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-slate-800">Near Campus</h4>
+                            <p className="text-[10px] text-slate-500">Solo Eats, Study Cafes</p>
+                          </div>
+                        </button>
+
+                        <button 
+                          onClick={() => setActiveTab('contacts')}
+                          className="p-3 bg-white border border-slate-200 rounded-xl flex items-center space-x-3 shadow-sm hover:border-[#005A36] text-left"
+                        >
+                          <div className="p-2 bg-[#F7B500]/20 text-[#005A36] rounded-lg">
+                            <Icon name="phone" size={18} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-slate-800">Contacts</h4>
+                            <p className="text-[10px] text-slate-500">Helplines & Offices</p>
+                          </div>
+                        </button>
+                      </div>
+
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
+                            <Icon name="newspaper" size={14} className="text-[#005A36]" />
+                            Official SKKU Announcements
+                          </h3>
+                          <a 
+                            href="https://www.skku.edu" 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="text-[10px] font-bold text-[#005A36] underline"
+                          >
+                            skku.edu ↗
+                          </a>
+                        </div>
+                        <div className="space-y-2 text-xs">
+                          <a href="https://www.skku.edu" target="_blank" rel="noreferrer" className="block p-2 bg-slate-50 rounded-lg hover:bg-slate-100 text-slate-700 font-medium">
+                            📢 2026 Fall Course Registration & Add/Drop Notice
+                          </a>
+                          <a href="https://www.skku.edu" target="_blank" rel="noreferrer" className="block p-2 bg-slate-50 rounded-lg hover:bg-slate-100 text-slate-700 font-medium">
+                            🌍 International Student Health Insurance Verification
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'questMap' && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border-2 border-[#005A36] rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="bg-[#005A36] text-[#F7B500] text-[10px] font-black px-2 py-0.5 rounded">
+                              LIVE PHONE GPS
+                            </span>
+                            <span className="text-[10px] font-bold text-emerald-700">
+                              {questCompleted ? 'Completed (+30 EXP)' : '+30 EXP Reward'}
+                            </span>
+                          </div>
+                          <h2 className="text-sm font-black text-slate-900 mt-1">
+                            {GPS_ROUTES[campus].questTitle}
+                          </h2>
+                          <p className="text-[11px] text-slate-500">
+                            Target: <strong className="text-[#005A36]">{GPS_ROUTES[campus].targetName}</strong>
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setActiveTab('home')}
+                          className="text-xs font-bold text-slate-500 hover:text-slate-800 px-2.5 py-1.5 bg-slate-100 rounded-xl"
+                        >
+                          Back
+                        </button>
+                      </div>
+
+                      {/* Map Mode Switcher & Official SKKU Map Link */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                          <button
+                            onClick={() => setMapMode('quest')}
+                            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition ${
+                              mapMode === 'quest'
+                                ? 'bg-[#005A36] text-[#F7B500]'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            🎮 Quest Map
+                          </button>
+                          <button
+                            onClick={() => setMapMode('real')}
+                            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition ${
+                              mapMode === 'real'
+                                ? 'bg-[#005A36] text-[#F7B500]'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            🗺️ Real Map
+                          </button>
+                        </div>
+
+                        <a
+                          href={GPS_ROUTES[campus].officialMapUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-white border border-[#005A36] text-[#005A36] hover:bg-[#005A36] hover:text-[#F7B500] px-3 py-2 rounded-xl text-[11px] font-bold shadow-sm transition flex items-center gap-1 whitespace-nowrap"
+                        >
+                          <span>Official SKKU Map</span>
+                          <span>↗</span>
+                        </a>
+                      </div>
+
+                      {mapMode === 'real' ? (
+                        <div className="bg-white border-2 border-[#005A36]/30 rounded-3xl h-[350px] overflow-hidden shadow-inner relative">
+                          <iframe
+                            title={`Actual SKKU ${campus === 'seoul' ? 'Seoul' : 'Suwon'} Campus Map`}
+                            src={GPS_ROUTES[campus].googleEmbedUrl}
+                            className="w-full h-full border-0"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                          <a
+                            href={`https://maps.google.com/?q=Sungkyunkwan+University+${campus === 'seoul' ? '600th+Anniversary+Hall+Seoul' : 'Samsung+Library+Suwon'}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="absolute bottom-3 left-3 right-3 bg-[#005A36] text-[#F7B500] text-center py-2 px-3 rounded-xl text-xs font-bold shadow-lg hover:bg-[#004428] transition"
+                          >
+                            Open Turn-by-Turn Navigation in Google Maps ↗
+                          </a>
+                        </div>
+                      ) : (
+                      <div 
+                        ref={mapContainerRef}
+                        onClick={handleMapPointerMove}
+                        className="bg-[#EAF4EE] border-2 border-[#005A36]/30 rounded-3xl h-[350px] relative overflow-hidden shadow-inner cursor-pointer"
+                      >
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none">
+                          <circle cx="15" cy="20" r="18" fill="#CBE7D5" opacity="0.65" />
+                          <circle cx="85" cy="78" r="22" fill="#CBE7D5" opacity="0.65" />
+                          <ellipse cx="52" cy="18" rx="20" ry="12" fill="#D5ECE0" opacity="0.7" />
+                          <path d="M 10 90 Q 35 70 50 50 T 90 15" stroke="#FFFFFF" strokeWidth="5" fill="none" strokeLinecap="round" />
+                          <path d="M 15 35 Q 45 45 75 75" stroke="#FFFFFF" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+                          <polyline
+                            points={GPS_ROUTES[campus].waypoints.map(w => `${w.x},${w.y}`).join(' ')}
+                            fill="none"
+                            stroke="#005A36"
+                            strokeWidth="1.5"
+                            strokeDasharray="2.5,2.5"
+                          />
+                        </svg>
+
+                        {GPS_ROUTES[campus].landmarks.map((lm, idx) => {
+                          const wpIndex = GPS_ROUTES[campus].waypoints.findIndex(w => w.x === lm.x && w.y === lm.y);
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (wpIndex !== -1) syncGpsPosition(wpIndex);
+                              }}
+                              style={{ left: `${lm.x}%`, top: `${lm.y}%` }}
+                              className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 group cursor-pointer"
+                            >
+                              <div className={`px-2 py-1 rounded-xl text-xs font-bold shadow-md border transition flex items-center gap-1 whitespace-nowrap ${
+                                lm.isTarget
+                                  ? questCompleted
+                                    ? 'bg-emerald-600 text-white border-emerald-800 scale-105'
+                                    : 'bg-[#F7B500] text-[#005A36] border-[#005A36] animate-pulse'
+                                  : 'bg-white/95 text-slate-700 border-slate-300 group-hover:border-[#005A36]'
+                              }`}>
+                                <span>{lm.icon}</span>
+                                <span className="text-[9px]">{lm.name}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+
+                        <div
+                          style={{
+                            left: `${currentWaypoint.x}%`,
+                            top: `${currentWaypoint.y}%`
+                          }}
+                          className="absolute -translate-x-1/2 -translate-y-[78%] z-20 transition-all duration-700 ease-out flex flex-col items-center pointer-events-none"
+                        >
+                          <div className="relative flex flex-col items-center">
+                            <HamkkyuMascot
+                              outfit={hamkkyuOutfit}
+                              motion={gpsStep === maxStepIndex ? 'cheer' : 'hop'}
+                              motionTrigger={gpsStep}
+                              size={76}
+                              speechBubble={gpsBubble}
+                            />
+                            <div className="w-7 h-3 bg-[#005A36]/30 rounded-full -mt-2 flex items-center justify-center">
+                              <div className="w-3 h-1.5 bg-[#005A36] rounded-full animate-ping" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="absolute bottom-2.5 inset-x-2.5 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-2xl px-3 py-2 flex items-center justify-between text-[11px] shadow pointer-events-none">
+                          <span className="font-bold text-slate-700 flex items-center gap-1">
+                            <Icon name="pin" size={13} className="text-[#005A36]" />
+                            {currentWaypoint.label}
+                          </span>
+                          <span className="font-black text-[#005A36]">
+                            GPS Synced
+                          </span>
+                        </div>
+                      </div>
+                      )}
+
+                      <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-2.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                            <Icon name="navigation" size={14} className="text-[#005A36]" />
+                            Phone GPS Distance Progress
+                          </span>
+                          <span className="text-[11px] font-bold text-[#005A36]">
+                            {Math.round((gpsStep / maxStepIndex) * 100)}%
+                          </span>
+                        </div>
+
+                        <input
+                          type="range"
+                          min={0}
+                          max={maxStepIndex}
+                          step={1}
+                          value={gpsStep}
+                          onChange={(e) => syncGpsPosition(Number(e.target.value))}
+                          aria-label="Simulate walking with your phone"
+                          className="w-full accent-[#005A36] cursor-pointer"
+                        />
+                        <p className="text-[11px] text-slate-500 text-center">
+                          Hamkkyu moves automatically as you walk with your phone (tap a building or slide GPS progress to test).
+                        </p>
+
+                        {questCompleted && (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-center text-xs text-emerald-800 font-bold">
+                            🎉 Yay! Hamkkyu reached {GPS_ROUTES[campus].targetName} and earned +30 EXP!
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {isCustomizeModalOpen && (
+                    <div className="absolute inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                      <div className="bg-white w-full rounded-t-3xl sm:rounded-3xl p-5 safe-bottom space-y-4 shadow-2xl max-h-[90%] overflow-y-auto">
+                        <div className="flex justify-between items-center border-b pb-3">
+                          <div>
+                            <h3 className="font-black text-base text-slate-900">Customize Hamkkyu</h3>
+                            <p className="text-[11px] text-slate-500">Tap an outfit or expression</p>
+                          </div>
+                          <button 
+                            onClick={() => setIsCustomizeModalOpen(false)} 
+                            className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600"
+                          >
+                            <Icon name="x" size={18} />
+                          </button>
+                        </div>
+
+                        <div className="bg-[#F6F5FC] rounded-2xl py-3 flex flex-col items-center justify-center border border-slate-200">
+                          <HamkkyuMascot 
+                            outfit={hamkkyuOutfit} 
+                            motion={hamkkyuMotion} 
+                            motionTrigger={motionTrigger}
+                            size={144} 
+                          />
+                        </div>
+
+                        <div className="flex bg-slate-100 p-1 rounded-xl">
+                          <button
+                            onClick={() => setCustomizerTab('outfit')}
+                            className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                              customizerTab === 'outfit'
+                                ? 'bg-[#005A36] text-[#F7B500] shadow-sm'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <Icon name="shirt" size={14} /> Outfits (6)
+                          </button>
+                          <button
+                            onClick={() => setCustomizerTab('emoticon')}
+                            className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                              customizerTab === 'emoticon'
+                                ? 'bg-[#005A36] text-[#F7B500] shadow-sm'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <Icon name="smile" size={14} /> Emoticons (8)
+                          </button>
+                        </div>
+
+                        {customizerTab === 'outfit' ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {OUTFIT_OPTIONS.map((opt) => (
+                              <button
+                                key={opt.id}
+                                onClick={() => {
+                                  setHamkkyuOutfit(opt.id);
+                                  triggerHamkkyuMotion('hop');
+                                }}
+                                className={`p-2.5 rounded-xl border-2 text-left transition flex items-center justify-between ${
+                                  hamkkyuOutfit === opt.id
+                                    ? 'bg-[#005A36]/10 border-[#005A36] text-[#005A36]'
+                                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                                }`}
+                              >
+                                <div>
+                                  <div className="text-xs font-bold">{opt.label}</div>
+                                  <div className="text-[10px] text-slate-500">{opt.desc}</div>
+                                </div>
+                                {hamkkyuOutfit === opt.id && (
+                                  <Icon name="check" size={16} className="text-[#005A36] shrink-0" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-4 gap-2">
+                            {MOTION_OPTIONS.map((mot) => (
+                              <button
+                                key={mot.id}
+                                aria-label={mot.label}
+                                onClick={() => triggerHamkkyuMotion(mot.id)}
+                                className={`p-2.5 rounded-xl border-2 flex items-center justify-center transition ${
+                                  hamkkyuMotion === mot.id
+                                    ? 'bg-[#7B61FF]/10 border-[#7B61FF]'
+                                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                                }`}
+                              >
+                                <HamkkyuMascot outfit={hamkkyuOutfit} motion={mot.id} size={46} />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => setIsCustomizeModalOpen(false)}
+                          className="w-full bg-[#005A36] hover:bg-[#004428] text-[#F7B500] font-bold text-sm py-3 rounded-2xl shadow-md transition"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'chat' && (
+                    <div className="flex flex-col h-full bg-slate-100 relative">
+                      <div className="bg-white px-4 py-2.5 border-b border-slate-200 flex justify-between items-center shadow-sm z-10">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 rounded-full bg-[#F6F5FC] border border-[#005A36] flex items-center justify-center overflow-hidden">
+                            <HamkkyuMascot outfit={hamkkyuOutfit} motion="idle" size={30} />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-xs text-slate-800">Hamkkyu AI Buddy</h3>
+                            <p className="text-[10px] text-emerald-600 font-medium">
+                              {isAiTyping 
+                                ? '● Hamkkyu is typing...' 
+                                : isUserTyping 
+                                  ? '● Hamkkyu is listening...' 
+                                  : '● Ask questions to earn +15 EXP'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => setIsFaqOpen(true)}
+                          className="bg-[#005A36] text-[#F7B500] text-xs font-bold px-3 py-1.5 rounded-xl border border-[#005A36] flex items-center gap-1.5 shadow-sm"
+                        >
+                          <Icon name="help" size={14} />
+                          FAQ Shortcuts
+                        </button>
+                      </div>
+
+                      <div className="flex-1 p-4 overflow-y-auto space-y-3 pb-14">
+                        {chatMessages.map((msg, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {msg.sender === 'ai' && (
+                              <div className="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                                <HamkkyuMascot outfit={hamkkyuOutfit} motion="idle" size={26} />
+                              </div>
+                            )}
+                            {msg.sticker ? (
+                              <div className="bg-white border-2 border-[#7B61FF]/30 rounded-2xl p-2 shadow-sm flex items-center justify-center">
+                                <HamkkyuMascot outfit={hamkkyuOutfit} motion={msg.sticker.id} size={74} />
+                              </div>
+                            ) : (
+                              <div className={`max-w-[78%] rounded-2xl p-3 text-xs leading-relaxed shadow-sm ${
+                                msg.sender === 'user' 
+                                  ? 'bg-[#005A36] text-white rounded-br-none' 
+                                  : 'bg-white text-slate-800 rounded-bl-none border border-slate-200'
+                              }`}>
+                                {msg.text}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <div ref={chatEndRef} />
+                      </div>
+
+                      {showChatStickers && (
+                        <div className="bg-white border-t border-slate-200 p-2.5 grid grid-cols-4 gap-1.5 shadow-inner z-20">
+                          {MOTION_OPTIONS.slice(0, 8).map((mot) => (
+                            <button
+                              key={mot.id}
+                              aria-label={mot.label}
+                              onClick={() => handleSendAiMsg(null, mot)}
+                              className="flex items-center justify-center p-1.5 rounded-xl hover:bg-[#F6F5FC] border border-transparent hover:border-[#7B61FF]/30 transition"
+                            >
+                              <HamkkyuMascot outfit={hamkkyuOutfit} motion={mot.id} size={42} />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="bg-white border-t border-slate-200 p-3 relative z-20">
+                        <div className="absolute -top-11 left-4 flex items-center pointer-events-none">
+                          <HamkkyuMascot 
+                            outfit={hamkkyuOutfit} 
+                            motion={miniChatMotion} 
+                            motionTrigger={chatInput.length + (isAiTyping ? 100 : 0)}
+                            size={48} 
+                          />
+                          {(isUserTyping || isAiTyping) && (
+                            <span className="ml-1 bg-[#7B61FF] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md animate-pulse">
+                              {isAiTyping ? 'Hamkkyu is typing...' : 'Hamkkyu is listening... ✨'}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-1.5">
+                          <button 
+                            onClick={() => setShowChatStickers(!showChatStickers)}
+                            title="Send Hamkkyu Emoticon"
+                            className={`p-2 rounded-lg transition ${
+                              showChatStickers ? 'bg-[#7B61FF] text-white' : 'text-slate-500 hover:text-[#7B61FF]'
+                            }`}
+                          >
+                            <Icon name="smile" size={18} />
+                          </button>
+                          <button className="p-2 text-slate-500 hover:text-[#005A36] rounded-lg">
+                            <Icon name="camera" size={18} />
+                          </button>
+                          <input 
+                            type="text" 
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSendAiMsg()}
+                            placeholder="Ask Hamkkyu anything (+15 EXP)..." 
+                            className="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#005A36]"
+                          />
+                          <button 
+                            onClick={() => handleSendAiMsg()}
+                            className="p-2 bg-[#005A36] text-[#F7B500] rounded-xl font-bold"
+                          >
+                            <Icon name="send" size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {isFaqOpen && (
+                        <div className="absolute inset-0 bg-black/50 z-40 flex items-end">
+                          <div className="bg-white w-full rounded-t-3xl p-5 safe-bottom space-y-3 max-h-[80%] overflow-y-auto">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                <Icon name="help" size={16} className="text-[#005A36]" />
+                                Frequently Asked Questions (+15 EXP)
+                              </h3>
+                              <button onClick={() => setIsFaqOpen(false)} className="text-slate-400">
+                                <Icon name="x" size={18} />
+                              </button>
+                            </div>
+
+                            <div className="space-y-2">
+                              {[
+                                'Where are printing stations located on campus?',
+                                'How do I ride the SKKU shuttle bus from Hyehwa Station?',
+                                'Where can I apply for student club memberships?',
+                                'What time does the Central Library close?',
+                                'How do I request international student transcripts?'
+                              ].map((faq, fIdx) => (
+                                <button
+                                  key={fIdx}
+                                  onClick={() => handleSendAiMsg(faq)}
+                                  className="w-full text-left p-3 bg-slate-50 hover:bg-[#005A36]/10 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 hover:text-[#005A36] transition flex justify-between items-center"
+                                >
+                                  <span>{faq}</span>
+                                  <Icon name="chevronRight" size={14} className="text-slate-400" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'cafeteria' && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+                          <Icon name="utensils" size={18} className="text-[#005A36]" />
+                          {campus === 'seoul' ? 'Humanities (Seoul) Cafeterias' : 'Natural Sciences (Suwon) Cafeterias'}
+                        </h2>
+                        <p className="text-xs text-slate-500">Daily menu options for today</p>
+                      </div>
+
+                      {campus === 'seoul' ? (
+                        <div className="space-y-3">
+                          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                              <h3 className="font-bold text-xs text-[#005A36]">Student Hall Cafeteria (학생회관 식당)</h3>
+                              <span className="text-[10px] bg-emerald-100 text-[#005A36] px-2 py-0.5 rounded font-bold">4,500 ~ 6,000 KRW</span>
+                            </div>
+                            <div className="space-y-1.5 text-xs text-slate-700">
+                              <p><strong>🥣 Breakfast:</strong> Soybean Paste Stew with Tofu (된장찌개)</p>
+                              <p><strong>🍛 Lunch:</strong> Pork Bulgogi Bowl & Kimchi (돼지불고기덮밥)</p>
+                              <p><strong>🍲 Dinner:</strong> Chicken Curry Rice & Pickled Radish (치킨카레라이스)</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                              <h3 className="font-bold text-xs text-[#005A36]">Faculty Hall Restaurant (교직원 식당)</h3>
+                              <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">7,000 KRW</span>
+                            </div>
+                            <div className="space-y-1.5 text-xs text-slate-700">
+                              <p><strong>🍱 Lunch Special:</strong> Grilled Salmon Set & Miso Soup</p>
+                              <p><strong>🥗 Salad Bar:</strong> Fresh Greens & Seasonal Fruit Included</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                              <h3 className="font-bold text-xs text-[#005A36]">Dormitory Cafeteria (봉룡학사 식당)</h3>
+                              <span className="text-[10px] bg-emerald-100 text-[#005A36] px-2 py-0.5 rounded font-bold">5,000 KRW</span>
+                            </div>
+                            <div className="space-y-1.5 text-xs text-slate-700">
+                              <p><strong>🍳 Breakfast:</strong> Scrambled Eggs, Toast & Bacon</p>
+                              <p><strong>🍖 Lunch:</strong> Tonkatsu Set with Cabbage Salad</p>
+                              <p><strong>🍲 Dinner:</strong> Soft Tofu Stew (순두부찌개)</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'cafe' && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+                          <Icon name="coffee" size={18} className="text-[#005A36]" />
+                          On-Campus Cafes & Convenience Stores
+                        </h2>
+                        <p className="text-xs text-slate-500">Grab drinks, snacks, and school supplies</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        {[
+                          { name: 'Pascucci SKKU', type: 'Cafe', loc: '600th Anniversary Hall 1F', hours: '08:00 - 21:00', highlight: 'Large seating area & study outlets' },
+                          { name: 'Hollys Coffee', type: 'Cafe', loc: 'Central Library 1F', hours: '24 Hours', highlight: 'Ideal for late night exam prep' },
+                          { name: 'CU Convenience Store', type: 'Store', loc: 'Student Hall B1', hours: '07:00 - 23:00', highlight: 'Snacks, drinks, print paper, ATM' },
+                          { name: 'GS25 Convenience Store', type: 'Store', loc: 'International Hall B2', hours: '24 Hours', highlight: 'Instant ramen, hot coffee, stationery' }
+                        ].map((store, sIdx) => (
+                          <div key={sIdx} className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                  store.type === 'Cafe' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {store.type}
+                                </span>
+                                <h3 className="font-bold text-xs text-slate-800 mt-1">{store.name}</h3>
+                              </div>
+                              <span className="text-[10px] text-slate-500 font-medium">{store.hours}</span>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-2">📍 {store.loc}</p>
+                            <p className="text-[11px] text-[#005A36] font-medium mt-1">✨ {store.highlight}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'near' && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+                          <Icon name="map" size={18} className="text-[#005A36]" />
+                          {campus === 'seoul' ? 'Near Hyehwa Station (Line 4)' : 'Near SKKU Station (Line 1)'}
+                        </h2>
+                        <p className="text-xs text-slate-500">Hamkkyu-approved restaurant & cafe recommendations</p>
+
+                        <div className="grid grid-cols-3 gap-1.5 mt-3 pt-2 border-t">
+                          <button
+                            onClick={() => setNearCategory('solo')}
+                            className={`py-1.5 rounded-lg text-xs font-bold transition text-center ${
+                              nearCategory === 'solo' 
+                                ? 'bg-[#005A36] text-[#F7B500]' 
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            🍜 Solo Eaters
+                          </button>
+                          <button
+                            onClick={() => setNearCategory('study')}
+                            className={`py-1.5 rounded-lg text-xs font-bold transition text-center ${
+                              nearCategory === 'study' 
+                                ? 'bg-[#005A36] text-[#F7B500]' 
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            ☕ Study Cafes
+                          </button>
+                          <button
+                            onClick={() => setNearCategory('diet')}
+                            className={`py-1.5 rounded-lg text-xs font-bold transition text-center ${
+                              nearCategory === 'diet' 
+                                ? 'bg-[#005A36] text-[#F7B500]' 
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            🥗 Diet / Health
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {nearCategory === 'solo' && (
+                          <>
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">샤브토랑 (Shabu Taurant)</h3>
+                                <span className="text-[10px] bg-emerald-100 text-[#005A36] px-2 py-0.5 rounded font-bold shrink-0">1-Person Shabu</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 {campus === 'seoul' ? 'Hyehwa Station Exit 4 / Main Street' : 'Yuljeon-dong SKKU Station Exit 2'}</p>
+                              <p className="text-xs text-slate-700 mt-2">Individual hot pots with personal induction burners. Perfect for comfortable solo dining without pressure!</p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">나누미 떡볶이 (Nanumi Tteokbokki)</h3>
+                                <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold shrink-0">24 Hours / Bar Seating</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 {campus === 'seoul' ? 'Sungkyunkwan-ro Gate Alley' : 'Suwon Campus West Gate Alley'}</p>
+                              <p className="text-xs text-slate-700 mt-2">Famous round bar counter seating where solo students quick-eat legendary spicy rice cakes & fishcakes anytime.</p>
+                            </div>
+                          </>
+                        )}
+
+                        {nearCategory === 'study' && (
+                          <>
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">Hollys Coffee (할리스)</h3>
+                                <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold shrink-0">Power Plugs Everywhere</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 {campus === 'seoul' ? 'Hyehwa Station Exit 3' : 'SKKU Station Main Plaza'}</p>
+                              <p className="text-xs text-slate-700 mt-2">Multi-floor spacious coffee shop designed with dedicated laptop desks and individual desk dividers for studying.</p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">King's Coffee (킹스커피 24시)</h3>
+                                <span className="text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold shrink-0">Budget & 24 Hours</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 {campus === 'seoul' ? 'SKKU Bus Stop Main Road' : 'Yuljeon-dong Student Street'}</p>
+                              <p className="text-xs text-slate-700 mt-2">Affordable oversized coffees with a quiet upper-floor study zone popular during midterm/final exam weeks.</p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">Ediya Coffee (이디야 성대점)</h3>
+                                <span className="text-[10px] bg-emerald-100 text-[#005A36] px-2 py-0.5 rounded font-bold shrink-0">Quiet Atmosphere</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 {campus === 'seoul' ? 'Sungkyunkwan-ro 10-gil' : 'Suwon Campus North Gate'}</p>
+                              <p className="text-xs text-slate-700 mt-2">Cozy, quiet environment near campus gate with reliable Wi-Fi for reading or completing assignments.</p>
+                            </div>
+                          </>
+                        )}
+
+                        {nearCategory === 'diet' && (
+                          <>
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">슬로우캘리 (Slow Cali Poke)</h3>
+                                <span className="text-[10px] bg-[#005A36] text-[#F7B500] px-2 py-0.5 rounded font-bold shrink-0">Hawaiian Poke Bowls</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 {campus === 'seoul' ? 'Sungkyunkwan-ro 7-1' : 'Yuljeon-ro 14-gil'}</p>
+                              <p className="text-xs text-slate-700 mt-2">Fresh Salmon & Tuna poke bowls with brown rice or kale salad base. Healthy, delicious, and high protein!</p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">Poke All Day (포케올데이)</h3>
+                                <span className="text-[10px] bg-emerald-100 text-[#005A36] px-2 py-0.5 rounded font-bold shrink-0">Custom Salad & Wrap</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 {campus === 'seoul' ? 'Hyehwa Station Exit 4 Alley' : 'SKKU Station Exit 2'}</p>
+                              <p className="text-xs text-slate-700 mt-2">Customizable protein bowls, avocado toast, low-calorie wraps, and fresh cold-pressed detox juices.</p>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold text-xs text-[#005A36]">샐러디 (Salady 성대입구점)</h3>
+                                <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold shrink-0">Salads & Sandwiches</span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1">📍 Main Gate Entrance</p>
+                              <p className="text-xs text-slate-700 mt-2">Quick, healthy chicken breast wraps, warm grain bowls, and fresh vegetable sandwiches for students on the go.</p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'timetable' && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                              <Icon name="calendar" size={18} className="text-[#005A36]" />
+                              My Academic Timetable
+                            </h2>
+                            <p className="text-xs text-slate-500">Fall 2026 Course Schedule</p>
+                          </div>
+
+                          <button 
+                            onClick={() => setIsPublicSchedule(!isPublicSchedule)}
+                            className={`flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold border transition ${
+                              isPublicSchedule 
+                                ? 'bg-emerald-50 text-[#005A36] border-[#005A36]' 
+                                : 'bg-slate-100 text-slate-600 border-slate-300'
+                            }`}
+                          >
+                            <Icon name={isPublicSchedule ? 'unlock' : 'lock'} size={12} />
+                            <span>{isPublicSchedule ? 'Public' : 'Private'}</span>
+                          </button>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t flex space-x-2">
+                          <button 
+                            onClick={() => setIsAddCourseOpen(true)}
+                            className="flex-1 bg-[#005A36] text-[#F7B500] text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm"
+                          >
+                            <Icon name="plus" size={14} /> Add Course
+                          </button>
+                          <button 
+                            onClick={() => setViewingFriendTimetable(friends[0])}
+                            className="flex-1 bg-white border-2 border-[#005A36] text-[#005A36] text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1 shadow-sm hover:bg-slate-50"
+                          >
+                            <Icon name="eye" size={14} /> Friend Schedule
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {mySchedule.map((c) => (
+                          <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm flex justify-between items-center">
+                            <div>
+                              <span className="text-[10px] bg-[#005A36] text-[#F7B500] px-2 py-0.5 rounded font-bold">
+                                {c.day} ({c.time})
+                              </span>
+                              <h3 className="font-bold text-xs text-slate-800 mt-1">{c.name}</h3>
+                              <p className="text-xs text-slate-500">{c.prof} • 📍 {c.room}</p>
+                            </div>
+
+                            <button 
+                              onClick={() => setReviewModalCourse(c)}
+                              className="bg-[#005A36]/10 text-[#005A36] hover:bg-[#005A36] hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold border border-[#005A36]/20 flex items-center gap-1 transition"
+                            >
+                              <Icon name="star" size={12} className="text-[#F7B500]" />
+                              Review
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {viewingFriendTimetable && (
+                        <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                          <div className="bg-white w-full rounded-2xl p-5 space-y-4 max-h-[85%] overflow-y-auto">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xl">{viewingFriendTimetable.avatar}</span>
+                                <div>
+                                  <h3 className="font-bold text-sm text-slate-800">{viewingFriendTimetable.name}'s Timetable</h3>
+                                  <p className="text-[10px] text-slate-500">Switch friend below</p>
+                                </div>
+                              </div>
+                              <button onClick={() => setViewingFriendTimetable(null)} className="text-slate-400">
+                                <Icon name="x" size={18} />
+                              </button>
+                            </div>
+
+                            <div className="flex gap-1.5 overflow-x-auto pb-1">
+                              {friends.map((f) => (
+                                <button
+                                  key={f.id}
+                                  onClick={() => setViewingFriendTimetable(f)}
+                                  className={`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap border ${
+                                    viewingFriendTimetable.id === f.id
+                                      ? 'bg-[#005A36] text-[#F7B500] border-[#005A36]'
+                                      : 'bg-slate-100 text-slate-600 border-slate-200'
+                                  }`}
+                                >
+                                  {f.avatar} {f.name}
+                                </button>
+                              ))}
+                            </div>
+
+                            {viewingFriendTimetable.isPublic ? (
+                              <div className="space-y-2">
+                                <div className="bg-slate-50 border p-3 rounded-xl text-xs space-y-1">
+                                  <span className="font-bold text-[#005A36]">Mon (09:00 - 10:30)</span>
+                                  <p className="font-bold text-slate-800">Introduction to Communication Theory</p>
+                                  <p className="text-slate-500">Prof. Choi • Business Bldg 33302</p>
+                                </div>
+                                <div className="bg-slate-50 border p-3 rounded-xl text-xs space-y-1">
+                                  <span className="font-bold text-[#005A36]">Thu (14:00 - 16:00)</span>
+                                  <p className="font-bold text-slate-800">Data Science & Web Analytics</p>
+                                  <p className="text-slate-500">Prof. Kang • Intl Hall 90201</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="p-6 text-center text-xs text-slate-500 space-y-2">
+                                <Icon name="lock" size={24} className="mx-auto text-slate-400" />
+                                <p className="font-medium">This friend has set their timetable to Private.</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {isAddCourseOpen && (
+                        <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                          <div className="bg-white w-full rounded-2xl p-5 space-y-3">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <h3 className="font-bold text-sm text-slate-800">Add Course to Schedule</h3>
+                              <button onClick={() => setIsAddCourseOpen(false)} className="text-slate-400">
+                                <Icon name="x" size={18} />
+                              </button>
+                            </div>
+
+                            <div className="space-y-2 text-xs">
+                              <input 
+                                type="text" 
+                                placeholder="Course Name" 
+                                value={newCourse.name}
+                                onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
+                                className="w-full border p-2 rounded-xl"
+                              />
+                              <input 
+                                type="text" 
+                                placeholder="Professor Name" 
+                                value={newCourse.prof}
+                                onChange={(e) => setNewCourse({ ...newCourse, prof: e.target.value })}
+                                className="w-full border p-2 rounded-xl"
+                              />
+                              <div className="flex space-x-2">
+                                <select 
+                                  value={newCourse.day}
+                                  onChange={(e) => setNewCourse({ ...newCourse, day: e.target.value })}
+                                  className="border p-2 rounded-xl text-xs"
+                                >
+                                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                                <input 
+                                  type="text" 
+                                  placeholder="Time (e.g., 10:30 - 12:00)" 
+                                  value={newCourse.time}
+                                  onChange={(e) => setNewCourse({ ...newCourse, time: e.target.value })}
+                                  className="flex-1 border p-2 rounded-xl"
+                                />
+                              </div>
+                              <input 
+                                type="text" 
+                                placeholder="Classroom / Building" 
+                                value={newCourse.room}
+                                onChange={(e) => setNewCourse({ ...newCourse, room: e.target.value })}
+                                className="w-full border p-2 rounded-xl"
+                              />
+                            </div>
+
+                            <button 
+                              onClick={handleAddCourse}
+                              className="w-full bg-[#005A36] text-[#F7B500] font-bold text-xs py-2.5 rounded-xl mt-2"
+                            >
+                              Save Course
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {(activeTab === 'reviews' || reviewModalCourse) && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+                          <Icon name="star" size={18} className="text-[#F7B500]" />
+                          SKKU Lecture Reviews
+                        </h2>
+                        <p className="text-xs text-slate-500">Read and submit authentic student course reviews</p>
+
+                        <div className="relative mt-3">
+                          <Icon name="search" size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                          <input 
+                            type="text" 
+                            value={reviewSearch}
+                            onChange={(e) => setReviewSearch(e.target.value)}
+                            placeholder="Search by course title or professor..." 
+                            className="w-full pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[#005A36]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {lectureReviews
+                          .filter(r => r.course.toLowerCase().includes(reviewSearch.toLowerCase()) || r.prof.toLowerCase().includes(reviewSearch.toLowerCase()))
+                          .map((rev) => (
+                            <div key={rev.id} className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm space-y-1.5">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h3 className="font-bold text-xs text-slate-800">{rev.course}</h3>
+                                  <p className="text-[10px] text-slate-500">{rev.prof}</p>
+                                </div>
+                                <div className="flex text-[#F7B500]">
+                                  {[...Array(rev.rating)].map((_, i) => <Icon key={i} name="star" size={12} fill="#F7B500" />)}
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-700 leading-relaxed pt-1">{rev.review}</p>
+                              <span className="text-[9px] text-slate-400 block text-right">{rev.date}</span>
+                            </div>
+                          ))}
+                      </div>
+
+                      {reviewModalCourse && (
+                        <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                          <div className="bg-white w-full rounded-2xl p-5 space-y-3">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <div>
+                                <h3 className="font-bold text-sm text-slate-800">Write Course Review</h3>
+                                <p className="text-xs text-[#005A36] font-medium">{reviewModalCourse.name}</p>
+                              </div>
+                              <button onClick={() => setReviewModalCourse(null)} className="text-slate-400">
+                                <Icon name="x" size={18} />
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 text-xs">
+                              <div>
+                                <label className="font-bold text-slate-700 block mb-1">Rating</label>
+                                <div className="flex space-x-2 text-[#F7B500]">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <button key={star} onClick={() => setNewRating(star)}>
+                                      <Icon name="star" size={20} fill={star <= newRating ? "#F7B500" : "none"} />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="font-bold text-slate-700 block mb-1">Your Honest Review</label>
+                                <textarea 
+                                  rows={3}
+                                  value={newReviewText}
+                                  onChange={(e) => setNewReviewText(e.target.value)}
+                                  placeholder="How were assignments, exams, and grading?" 
+                                  className="w-full border p-2 rounded-xl text-xs"
+                                />
+                              </div>
+                            </div>
+
+                            <button 
+                              onClick={handleSubmitReview}
+                              className="w-full bg-[#005A36] text-[#F7B500] font-bold text-xs py-2.5 rounded-xl"
+                            >
+                              Submit Review
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'friends' && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h2 className="text-sm font-bold text-slate-800">Friends & Direct Messages</h2>
+                            <p className="text-xs text-slate-500">My Friend Code: <span className="font-bold text-[#005A36]">{myCode}</span></p>
+                          </div>
+                        </div>
+
+                        <div className="flex space-x-2">
+                          <input 
+                            type="text" 
+                            value={friendCodeInput}
+                            onChange={(e) => setFriendCodeInput(e.target.value)}
+                            placeholder="Enter friend code (e.g. SKKU-1234-SL)" 
+                            className="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-[#005A36]"
+                          />
+                          <button 
+                            onClick={handleAddFriend}
+                            className="bg-[#005A36] text-[#F7B500] px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1"
+                          >
+                            <Icon name="userPlus" size={14} /> Add
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="text-xs font-bold text-slate-700 px-1">Your Friends ({friends.length})</h3>
+                        {friends.map((f) => (
+                          <div 
+                            key={f.id} 
+                            onClick={() => setActiveChatFriend(f)}
+                            className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex justify-between items-center hover:border-[#005A36] cursor-pointer"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="text-2xl">{f.avatar}</div>
+                              <div>
+                                <h4 className="font-bold text-xs text-slate-800">{f.name}</h4>
+                                <p className="text-[10px] text-slate-400">{f.status}</p>
+                              </div>
+                            </div>
+                            <Icon name="chat" size={16} className="text-[#005A36]" />
+                          </div>
+                        ))}
+                      </div>
+
+                      {activeChatFriend && (
+                        <div className="absolute inset-0 bg-slate-100 z-50 flex flex-col">
+                          <div className="bg-white px-4 py-3 border-b flex justify-between items-center">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xl">{activeChatFriend.avatar}</span>
+                              <div>
+                                <h3 className="font-bold text-xs text-slate-800">{activeChatFriend.name}</h3>
+                                <p className="text-[10px] text-slate-400">{activeChatFriend.code}</p>
+                              </div>
+                            </div>
+                            <button onClick={() => setActiveChatFriend(null)} className="text-slate-500">
+                              <Icon name="x" size={20} />
+                            </button>
+                          </div>
+
+                          <div className="flex-1 p-4 overflow-y-auto space-y-2">
+                            {(friendMessages[activeChatFriend.id] || []).map((m, mIdx) => (
+                              <div key={mIdx} className={`flex ${m.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+                                {m.sticker ? (
+                                  <div className="bg-white border-2 border-[#7B61FF]/30 rounded-2xl p-2 shadow-sm flex flex-col items-center">
+                                    <HamkkyuMascot outfit={hamkkyuOutfit} motion={m.sticker.id} size={72} />
+                                    <span className="text-[8px] text-slate-400 mt-0.5">{m.time}</span>
+                                  </div>
+                                ) : (
+                                  <div className={`max-w-[75%] p-2.5 rounded-2xl text-xs ${
+                                    m.sender === 'me' ? 'bg-[#005A36] text-white' : 'bg-white text-slate-800 border'
+                                  }`}>
+                                    {m.text}
+                                    <span className="block text-[8px] opacity-70 text-right mt-1">{m.time}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {showDmStickers && (
+                            <div className="bg-white border-t border-slate-200 p-2.5 grid grid-cols-4 gap-1.5">
+                              {MOTION_OPTIONS.slice(0, 8).map((mot) => (
+                                <button
+                                  key={mot.id}
+                                  aria-label={mot.label}
+                                  onClick={() => handleSendDM(mot)}
+                                  className="flex items-center justify-center p-1.5 rounded-xl hover:bg-[#F6F5FC] transition"
+                                >
+                                  <HamkkyuMascot outfit={hamkkyuOutfit} motion={mot.id} size={42} />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="p-3 bg-white border-t flex items-center space-x-2">
+                            <button
+                              onClick={() => setShowDmStickers(!showDmStickers)}
+                              title="Send Hamkkyu Emoticon"
+                              className={`p-2 rounded-lg transition ${
+                                showDmStickers ? 'bg-[#7B61FF] text-white' : 'text-slate-500 hover:text-[#7B61FF]'
+                              }`}
+                            >
+                              <Icon name="smile" size={18} />
+                            </button>
+                            <input 
+                              type="text" 
+                              value={dmInput}
+                              onChange={(e) => setDmInput(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSendDM()}
+                              placeholder={`Message ${activeChatFriend.name}...`} 
+                              className="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none"
+                            />
+                            <button onClick={() => handleSendDM()} className="bg-[#005A36] text-[#F7B500] p-2 rounded-xl font-bold">
+                              <Icon name="send" size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'contacts' && (
+                    <div className="p-4 space-y-4">
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+                          <Icon name="phone" size={18} className="text-[#005A36]" />
+                          Important SKKU Contacts
+                        </h2>
+                        <p className="text-xs text-slate-500">Helplines and administrative office numbers</p>
+
+                        <a 
+                          href="https://www.skku.edu" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="mt-3 block w-full text-center bg-[#005A36] text-[#F7B500] text-xs font-bold py-2 rounded-xl shadow-sm"
+                        >
+                          Visit Official SKKU Directory ↗
+                        </a>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {[
+                          { name: 'Campus Emergency Line (24 Hours)', phone: '02-760-1119' },
+                          { name: 'Office of International Affairs', phone: '02-760-0026' },
+                          { name: 'Humanities (Seoul) Academic Support', phone: '02-760-0114' },
+                          { name: 'Natural Sci (Suwon) Academic Support', phone: '031-290-5114' },
+                          { name: 'SKKU Health Center', phone: '02-760-0108' }
+                        ].map((c, cIdx) => (
+                          <div key={cIdx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex justify-between items-center">
+                            <div>
+                              <h3 className="font-bold text-xs text-slate-800">{c.name}</h3>
+                              <p className="text-xs text-[#005A36] font-semibold mt-0.5">{c.phone}</p>
+                            </div>
+                            <a 
+                              href={`tel:${c.phone}`} 
+                              className="bg-[#005A36]/10 text-[#005A36] p-2 rounded-lg font-bold text-xs hover:bg-[#005A36] hover:text-white transition"
+                            >
+                              Call
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </main>
+
+                <nav className="absolute bottom-0 inset-x-0 bg-white border-t border-slate-200 flex justify-around items-center pt-2 safe-bottom z-30 shadow-lg">
+                  {[
+                    { id: 'home', label: 'Home', icon: 'home' },
+                    { id: 'chat', label: 'AI Chat', icon: 'chat' },
+                    { id: 'near', label: 'Near Campus', icon: 'map' },
+                    { id: 'timetable', label: 'Timetable', icon: 'calendar' },
+                    { id: 'friends', label: 'Friends', icon: 'users' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex flex-col items-center space-y-1 transition py-0.5 px-2 ${
+                        activeTab === tab.id ? 'text-[#005A36]' : 'text-slate-400 hover:text-slate-600'
+                      }`}
+                    >
+                      <Icon name={tab.icon} size={18} className={activeTab === tab.id ? 'text-[#005A36]' : 'text-slate-400'} />
+                      <span className={`text-[10px] ${activeTab === tab.id ? 'font-black text-[#005A36]' : 'font-medium'}`}>
+                        {tab.label}
+                      </span>
+                    </button>
+                  ))}
+                </nav>
+              </>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
